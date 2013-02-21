@@ -1,0 +1,90 @@
+== Introduction ==
+
+The Mite provides many useful features for debugging target boards:
+
+* USB to serial interface, terminating with DTE female configuration
+(equivalent to the end of a null modem cable)
+* Power cycling target, up to 16V, 16A, Rds on 4.1mOhm
+* Power monitoring of target (voltage and current)
+* Two soft switches for power/reset/etc
+
+== USB to Serial Interface ==
+
+The USB to serial interface is provided by the second port of the FTDI 2232D
+chip. RS232 levels are provided on a DB9 female connector in a DTE (null
+modem) configuration. For boards with a DCE connector, the Mite can be
+plugged in directly.
+
+== Power Cycling ==
+
+Power cycling is provided via a P-Channel mosfet, the Infineon IPD90P03P4L-04.
+The jumper next to the power block controls the source of power used, USB if
+the jumper is set, or Vin if the jumper is removed. Enabling and disabling the
+mosfet is done via a FT2232D GPIO.
+
+== Power Monitoring ==
+
+Power monitoring is performed via a TI INA219 I2C current/voltage monitor. A
+50mOhm current sense resistor is used. The I2C bus is connected through the
+FT2232D I2C interface.
+
+== Soft Switches ==
+
+Back to back mosfets provide soft switch support. When the soft switch is open,
+resistance is very high (above 1 MOhm), when the switch is closed, resistance
+is in the 3 Ohm range.
+
+The actual configuration of the physical switches they connect to is not
+important (pullup, pulldown, etc) so long as the voltage is not above 5V.
+Additionally, the Mite and the target board need to share a ground reference
+for the soft switches t work properly.
+
+The soft switches are controlled through FT2232D GPIOs.
+
+== Indicators ==
+
+The board contains two indicator LEDs. The one near the USB connector indicates
+that the board is operational, the indicator near the serial connector indicates
+that the target is receiving power.
+
+== Mite Utility ==
+
+The Mite utility uses libftdi to provide access to the Mite board. To read
+power consumption, just run the mite utility:
+
+./mite
+
+shunt 0.020500V, bus 5.125000V
+5.125000V * 410.000mA = 2101.2500mW
+
+To set or clear soft switches or the power mosfet, use set/clear an the name
+of the GPIO:
+
+./mite set user		# Close the user soft switch
+./mite clear power	# Turn off the power mosfet
+
+If more than one Mite is connected, an argument can also be passed to indicate
+which USB device to open. The format used is the one supported by
+ftdi_usb_open_string:
+
+d:<devicenode> path of bus and device-node (e.g. "003/001") within usb device
+tree (usually at /proc/bus/usb/)
+
+i:<vendor>:<product> first device with given vendor and product id, ids can
+be decimal, octal (preceded by "0") or hex (preceded by "0x")
+
+i:<vendor>:<product>:<index> as above with index being the number of the
+device (starting with 0) if there are more than one
+
+s:<vendor>:<product>:<serial> first device with given vendor id, product id
+and serial string
+
+So to open the reset soft switch of a Mite with a specific serial number:
+
+./mite s:0x0403:0x6010:0008 clear reset
+
+To check power based on a specific sysfs path:
+
+devpath=/sys/bus/usb/devices/2-1.1.1.1
+dev=$(printf "%03d/%03d" $(cat "$devpath/busnum") $(cat "$devpath/devnum")
+./mite d:$dev
