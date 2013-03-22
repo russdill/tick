@@ -1,0 +1,20 @@
+* test
+
+.include NDC7002N.mod
+
+
+.model nmos nmos(level=14, version=4.6.5)
+*.model nmos nmos(level=3, vto=2.5)
+.model pmos pmos(level=14, version=4.6.5)
+* dgsb
+.model npn npn(level=1)
+.model pnp pnp(level=1)
+* cbe
+
+V1 vcc 0 dc 5V
+
+X0 bb_rst ctrl 0 NDC7002N
+R0 ctrl 0 4.7k
+R1 bb_rst vcc 4.7k
+
+V0 ctrl 0 dc 0V pulse(0 3.3V 50m 5m 5m 50m 100m)

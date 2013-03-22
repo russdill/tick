@@ -1,0 +1,33 @@
+#--vmode
+#--compact
+
+
+[labels]
+refdes=J?
+device=JTAG
+
+[left]
+
+1	TMS
+3	TDI
+5	TVDD
+7	TDO
+9	TCKRTN
+11	TCK
+13	EMU0
+15	SRST
+17	EMU2
+19	EMU4
+
+[right]
+
+2 !	TRSTn
+4	TDIS
+6	NC
+8	GND
+10	GND
+12	GND
+14	EMU1
+16	GND
+18	EMU3
+20	GND

@@ -1,0 +1,42 @@
+--vmode
+#--compact
+
+
+[labels]
+refdes=U?
+device=74245
+footprint=PW(R-PDSO-G20)
+
+[left]
+
+1	DIR
+
+.bus
+2	A1
+3	A2
+4	A3
+5	A4
+6	A5
+7	A6
+8	A7
+9	A8
+
+[right]
+
+19 !	\_OE\_
+
+.bus
+18	B1
+17	B2
+16	B3
+15	B4
+14	B5
+13	B6
+12	B7
+11	B8
+
+[top]
+20	VCC
+
+[bottom]
+10	GND

@@ -1,0 +1,26 @@
+--vmode
+#--compact
+
+
+[labels]
+refdes=U?
+device=LM3671
+footprint=SOT23-5
+
+[left]
+
+3	EN
+
+[right]
+
+5	SW
+
+4	FB
+
+[top]
+
+1	VIN
+
+[bottom]
+
+2	GND

@@ -1,0 +1,15 @@
+*~
+oshpark/
+oshpark.zip
+symbols/generated/*.sym
+*.gbr
+*.cnc
+*.png
+*.bak*
+*.old
+tick.pdf
+*.ps
+*-
+*.net
+*.cmd
+

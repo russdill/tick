@@ -1,0 +1,20 @@
+#--vmode
+--compact
+
+
+[labels]
+refdes=U?
+#device=TPD4E002
+#footprint=sot23-5
+
+[right]
+
+1	L1
+3	L2
+4	L3
+5	L4
+
+[bottom]
+
+2	GND
+

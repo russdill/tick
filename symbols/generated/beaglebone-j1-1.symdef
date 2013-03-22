@@ -1,0 +1,20 @@
+#--vmode
+#--compact
+
+[labels]
+refdes=U?
+device=BeagleBone-J1
+footprint=BeagleBone
+
+[right]
+
+J1-1 DGND
+J1-4 B_UART0_RX
+J1-5 B_UART0_TX
+
+[nc]
+
+J1-2
+J1-3
+J1-6
+

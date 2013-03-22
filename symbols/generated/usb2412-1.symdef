@@ -1,0 +1,65 @@
+--vmode
+#--compact
+
+
+[labels]
+refdes=U?
+device=USB2412
+footprint=QFN-28
+
+[left]
+
+21	USBDM_UP
+22	USBDP_UP
+
+18	USB_DET
+
+13	NON_REM1
+19	SUSP_IND/NON_REM0
+
+16	HS_IND
+
+24	XTALIN/CLKIN
+23	XTALOUT
+
+6	TEST
+
+17 !	RESET_N
+
+[right]
+
+28	USBDM_DN1
+1	USBDP_DN1
+
+2	USBDM_DN2
+3	USBDP_DN2
+
+7	PRTPWR1
+11	PRTPWR2
+
+8	OCS_N1
+12	OCS_N2
+
+26	RBIAS
+
+[top]
+
+9	CRFILT
+
+4	VDD33
+10	VDD33
+14	VDD33
+20	VDD33
+27	VDD33
+
+25	PLLFILT
+
+[bottom]
+
+15	TEST1
+
+29	ePAD
+
+[nc]
+
+5

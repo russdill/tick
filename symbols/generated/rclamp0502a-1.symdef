@@ -1,0 +1,28 @@
+--vmode
+#--compact
+
+
+[labels]
+refdes=U?
+#device=RClamp0502A
+#footprint=sot-666
+
+[left]
+
+1	L1
+3	L2
+
+[right]
+
+6	L1
+4	L2
+
+[top]
+
+5	VCC
+
+
+[bottom]
+
+2	GND
+

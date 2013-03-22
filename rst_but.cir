@@ -1,0 +1,28 @@
+* test
+
+.include NDC7002N.mod
+.include BSS84.mod
+.include Si7997DP.mod
+
+
+.model nmos nmos(level=14, version=4.6.5)
+*.model nmos nmos(level=3, vto=2.5)
+.model pmos pmos(level=14, version=4.6.5)
+* dgsb
+.model npn npn(level=1)
+.model pnp pnp(level=1)
+* cbe
+
+V1 vcca 0 dc 3.3V
+V2 vccb 0 dc 3.3V
+V3 vtemp 0 dc 27V
+
+X6 n1 ctrl vcca vtemp BSS84
+*X6 n1 ctrl vcca Si7997DP
+X1 bb_rst n1 0 NDC7002N
+
+R12 ctrl vcca 4.7k
+R16 n1 0 4.7k
+Rpull bb_rst vccb 1k
+
+V0 ctrl 0 dc 0V pulse(0 3.3V 50m 5m 5m 50m 100m)

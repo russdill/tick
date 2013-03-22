@@ -1,0 +1,14 @@
+#--vmode
+#--compact
+
+[labels]
+refdes=U?
+device=BeagleBone-MHOLE
+footprint=BeagleBone
+
+[right]
+
+1	SHIELD
+2	SHIELD
+3	SHIELD
+4	SHIELD
