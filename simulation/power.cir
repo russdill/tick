@@ -1,0 +1,23 @@
+* test
+
+* DGS
+.include Si7997DP.mod
+* DGST
+.include FDC6327C.mod
+
+
+V1 vcc 0 dc 5V
+Vtemp temp 0 dc 27V
+
+
+R21 ctrl 0 4.7k
+X3a n1 ctrl 0 temp FDC6327CN
+R20 vcc n1 4.7k
+X3b n2 n1 vcc temp FDC6327CP
+R19 n2 0 10k
+X2a vcc n2 n3 Si7997DP
+X2b vout n2 n3 Si7997DP
+Rload vout 0 100
+C30 vout n2 0.1u
+
+V0 ctrl 0 dc 0V pulse(0 3.3V 50m 5m 5m 50m 100m)

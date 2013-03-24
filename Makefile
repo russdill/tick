@@ -17,11 +17,11 @@ PCB=~/src/pcb/_install/bin/pcb
 PCB_BATCH=~/src/pcb/_install/bin/pcb
 GSCH2PCB=~/src/pcb/gsch2pcb
 
-SCHEMATICS=tick_1.sch tick_2.sch tick_3.sch
+SCHEMATICS=tick_1.sch tick_2.sch tick_3.sch tick_4.sch tick_5.sch
 
 all: tick_front.png tick_back.png tick_schematic.pdf tick.pdf gerber
 
-tick_schematic.pdf: tick_1.ps tick_2.ps tick_3.ps
+tick_schematic.pdf: tick_1.ps tick_2.ps tick_3.ps tick_4.ps tick_5.ps
 	gs -q -dQUIET -dBATCH -dNOPAUSE \
 		-sDEVICE=pdfwrite -sOutputFile="$@" $^
 
@@ -34,16 +34,16 @@ symbols: $(GEN_SYM)
 	djboxsym "$<" > "$@"
 
 %.ps: %.sch
-	gschem -p -o$@ -s/usr/share/gEDA/scheme/print.scm $<
+	gschem -p -o$@ -sprint.scm $<
 
 #tick.zip: tick.pcb Makefile
 #	tmp=$(shell mktemp -d); cd $$tmp; \
 #	$(PCB) -x gerber --verbose --all-layers $(PWD)/$<
 
-tick.zip: tick_gerber Makefile
+tick.zip: gerber Makefile
 	zip $@ tick.{{bottom{,mask,silk},top{,mask,silk},group[1-2],outline,}.gbr,plated-drill.cnc}
 
-oshpark.zip: tick_gerber
+oshpark.zip: gerber
 	@-rm -rf oshpark/
 	mkdir oshpark
 	cp tick.top.gbr oshpark/Top\ Layer.ger
@@ -51,13 +51,15 @@ oshpark.zip: tick_gerber
 	cp tick.topmask.gbr oshpark/Top\ Solder\ Mask.ger
 	cp tick.bottommask.gbr oshpark/Bottom\ Solder\ Mask.ger
 	cp tick.outline.gbr oshpark/Board\ Outline.ger
+	cp tick.group6.gbr oshpark/Top\ Silk\ Screen.ger
+	cp tick.bottomsilk.gbr oshpark/Bottom\ Silk\ Screen.ger
 	./merge_drill.sh tick.{un,}plated-drill.cnc > oshpark/Drills.xln
 	-rm oshpark.zip
 	cd oshpark && zip ../oshpark.zip *.ger *.xln
 
-.PHONY: tick_gerber
-tick_gerber: tick.pcb
-	$(PCB) -x gerber --verbose --all-layers $<
+.PHONY: gerber
+gerber: tick.pcb
+	$(PCB) -x gerber --verbose --metric --all-layers $<
 
 .PHONY: png
 png: tick_front.png tick_back.png
@@ -67,6 +69,12 @@ png: tick_front.png tick_back.png
 
 %.pdf: %.ps
 	ps2pdf $< $@
+
+tick.bom: tick_*.sch
+	gnetlist -g bom2 $^ -o $@
+
+%.xy: %.pcb
+	$(PCB_BATCH) -x bom --bomfile /dev/null $<
 
 DPI=500
 COLOR=purple

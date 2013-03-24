@@ -1,3 +1,4 @@
 (component-library "symbols")
 (component-library "symbols/generated")
+(output-color "enabled")
 (attribute-promotion "enabled")
