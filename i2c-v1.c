@@ -24,7 +24,6 @@ Lesser General Public License for more details.
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 //#define CHART
-#define WAIT_ON_DIRECTION_CHANGE
 
 struct v1_priv {
 	unsigned char dir;
@@ -179,6 +178,25 @@ static int v1_gpio_low(struct adapter *adap, int gpio)
 	return v1_gpio_state(adap, gpio, 0);
 }
 
+static int v1_gpio_get(struct adapter *adap, int gpio)
+{
+	struct v1_priv *priv = adap->priv;
+	int ret;
+	unsigned char tmp;
+
+	if (adap->hw_error)
+		return adap->hw_error;
+
+	ret = ftdi_write_data(adap->ftdic, &priv->gpio, 1);
+	if (ret >= 0)
+		ret = ftdi_read_data(adap->ftdic, &tmp, 1);
+
+	if (ret < 0)
+		adap->hw_error = ret;
+
+	return !!(tmp & (1 << gpio));
+}
+
 static void process_input(struct adapter *adap)
 {
 	struct v1_priv *priv = adap->priv;
@@ -265,23 +283,6 @@ static void append_data_clock(struct adapter *adap, unsigned char data,
 	if (priv->dest_n == ARRAY_SIZE(priv->dest))
 		flush_all(adap);
 
-	if (!data && !(priv->dir & (1 << adap->ops->sda_out))) {
-		int ret;
-
-#ifdef WAIT_ON_DIRECTION_CHANGE
-		flush_all(adap);
-#else
-		flush_output(adap);
-#endif
-
-		priv->dir |= 1 << adap->ops->sda_out;
-		ret = ftdi_set_bitmode(adap->ftdic, priv->dir, BITMODE_SYNCBB);
-		if (ret < 0) {
-			adap->hw_error = ret;
-			adap->i2c_error = 1;
-		}
-	}
-
 	priv->gpio &= ~((1 << adap->ops->sda_out) | (1 << adap->ops->scl));
 	priv->gpio |= data ? (1 << adap->ops->sda_out) : 0;
 	priv->gpio |= clock ? (1 << adap->ops->scl) : 0;
@@ -290,26 +291,6 @@ static void append_data_clock(struct adapter *adap, unsigned char data,
 
 	if (priv->wr_bytes == priv->chunk)
 		flush_output(adap);
-}
-
-static void release_sda(struct adapter *adap)
-{
-	struct v1_priv *priv = adap->priv;
-
-	if ((priv->dir & (1 << adap->ops->sda_out)) && !adap->hw_error) {
-		int ret;
-#ifdef WAIT_ON_DIRECTION_CHANGE
-		flush_all(adap);
-#else
-		flush_output(adap);
-#endif
-		priv->dir &= ~(1 << adap->ops->sda_out);
-		ret = ftdi_set_bitmode(adap->ftdic, priv->dir, BITMODE_SYNCBB);
-		if (ret < 0) {
-			adap->hw_error = ret;
-			adap->i2c_error = 1;
-		}
-	}
 }
 
 static int v1_start(struct adapter *adap)
@@ -339,7 +320,6 @@ static int v1_stop(struct adapter *adap)
 	append_data_clock(adap, 0, 1, NULL);
 	append_data_clock(adap, 0, 1, NULL);
 	append_data_clock(adap, 1, 1, NULL);
-	release_sda(adap);
 	append_data_clock(adap, 1, 1, NULL);
 	flush_all(adap);
 	return 0;
@@ -358,7 +338,6 @@ static int v1_outb(struct adapter *adap, unsigned char c)
 		append_data_clock(adap, sb, 1, NULL);
 		append_data_clock(adap, sb, 0, NULL);
 	}
-	release_sda(adap);
 	append_data_clock(adap, 1, 0, NULL);
 	append_data_clock(adap, 1, 1, NULL);
 	append_data_clock(adap, 1, 1, NULL);
@@ -370,7 +349,6 @@ static int v1_inb(struct adapter *adap, unsigned char *dest)
 {
 	int i;
 
-	release_sda(adap);
 	for (i = 0; i < 8; i++) {
 		append_data_clock(adap, 1, 0, NULL);
 		append_data_clock(adap, 1, 1, NULL);
@@ -396,6 +374,7 @@ struct adapter_ops v1_ops = {
 	.gpio_input	= v1_gpio_input,
 	.gpio_high	= v1_gpio_high,
 	.gpio_low	= v1_gpio_low,
+	.gpio_get	= v1_gpio_get,
 	.i2c_start	= v1_start,
 	.i2c_repstart	= v1_repstart,
 	.i2c_stop	= v1_stop,
@@ -403,13 +382,14 @@ struct adapter_ops v1_ops = {
 	.i2c_outb	= v1_outb,
 	.i2c_acknak	= v1_acknak,
 	.flush		= flush_all,
-	.sda_out	= 0,
-	.sda_in		= 1,
-	.scl		= 2,
-	.reset		= 4,
-	.user		= 5,
-	.power		= 3,
-	.interface	= INTERFACE_B,
-	.speed_hz	= 1000,
-	.desc		= "Mite",
+        .sda_out        = 1,
+        .sda_in         = 2,
+        .scl            = 0,
+        .reset          = 8,
+        .user           = 9,
+        .power          = 15,
+        .i2c_en         = 14,
+        .interface      = INTERFACE_A,
+	.speed_hz	= 50,
+	.desc		= "Dual RS232-HS",
 };

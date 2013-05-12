@@ -1,18 +1,18 @@
-all: mite
+all: tick
 
 CC = gcc
 CFLAGS = -O2 -g -Wall
 LIBS = -lftdi
 
-OBJS = i2c.o i2c-v1.o i2c-v2.o mite.o
+OBJS = i2c.o i2c-v2.o tick.o
 
 *.o: Makefile *.h
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-mite: $(OBJS)
+tick: $(OBJS)
 	$(CC) $^ -o $@ $(LIBS)
 
 clean:
-	-rm -f *.o mite
+	-rm -f *.o tick

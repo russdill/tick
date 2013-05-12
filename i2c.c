@@ -29,7 +29,8 @@ struct adapter *adapter_attach(struct ftdi_context *ftdic,
 	unsigned short dir = 0;
 	int ret;
 
-	dir |= (1 << ops->reset) | (1 << ops->power) | (1 << ops->user);
+	dir |= (1 << ops->reset) | (1 << ops->power);
+	dir |= (1 << ops->user) | (1 << ops->i2c_en);
 	dir |= (1 << ops->scl) | (1 << ops->sda_out);
 	dir &= ~(1 << ops->sda_in);
 
@@ -105,6 +106,10 @@ int adapter_gpio_low(struct adapter *adap, int gpio)
 	return adap->ops->gpio_low(adap, gpio);
 }
 
+int adapter_gpio_get(struct adapter *adap, int gpio)
+{
+	return adap->ops->gpio_get(adap, gpio);
+}
 
 int i2c_xfer(struct adapter *adap, struct i2c_msg msgs[], int count)
 {

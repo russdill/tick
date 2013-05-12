@@ -55,6 +55,7 @@ struct adapter_ops {
 	int (*gpio_input)(struct adapter*, int);
 	int (*gpio_high)(struct adapter*, int);
 	int (*gpio_low)(struct adapter*, int);
+	int (*gpio_get)(struct adapter*, int);
 	int (*i2c_start)(struct adapter*);
 	int (*i2c_repstart)(struct adapter*);
 	int (*i2c_stop)(struct adapter*);
@@ -68,6 +69,7 @@ struct adapter_ops {
 	int reset;
 	int user;
 	int power;
+	int i2c_en;
 	int interface;
 	int speed_hz;
 	const char *desc;
@@ -96,6 +98,7 @@ int adapter_gpio_output(struct adapter *adap, int gpio);
 int adapter_gpio_input(struct adapter *adap, int gpio);
 int adapter_gpio_high(struct adapter *adap, int gpio);
 int adapter_gpio_low(struct adapter *adap, int gpio);
+int adapter_gpio_get(struct adapter *adap, int gpio);
 
 int adapter_hw_error(struct adapter *adap);
 

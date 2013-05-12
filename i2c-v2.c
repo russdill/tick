@@ -39,6 +39,9 @@ struct v2_priv {
 	int chunk;
 };
 
+static void append_byte(struct adapter *adap, unsigned char byte);
+static void append_read(struct adapter *adap, unsigned char *dest);
+
 static void process_input(struct adapter *adap)
 {
 	struct v2_priv *priv = adap->priv;
@@ -61,8 +64,10 @@ static void process_input(struct adapter *adap)
 		if (adap->i2c_error)
 			break;
 		*priv->dest[i] = priv->rd_buffer[i];
-		if (priv->dest[i] == &priv->nack && (priv->nack & 1))
+		if (priv->dest[i] == &priv->nack && (priv->nack & 1)) {
+			printf("nack\n");
 			adap->i2c_error = 1;
+		}
 	}
 
 	priv->dest_n -= ret;
@@ -119,28 +124,45 @@ static int update_gpio(struct adapter *adap, int high)
 	return adap->hw_error;
 }
 
-int v2_gpio_output(struct adapter *adap, int gpio)
+static int v2_gpio_output(struct adapter *adap, int gpio)
 {
 	struct v2_priv *priv = adap->priv;
 	priv->dir |= 1 << gpio;
 	return update_gpio(adap, gpio > 7);
 }
 
-int v2_gpio_input(struct adapter *adap, int gpio)
+static int v2_gpio_get(struct adapter *adap, int gpio)
+{
+	char byte;
+
+	if (gpio > 7) {
+		append_byte(adap, GET_BITS_HIGH);
+		append_read(adap, (unsigned char *) &byte);
+		gpio -= 8;
+	} else {
+		append_byte(adap, GET_BITS_LOW);
+		append_read(adap, (unsigned char *) &byte);
+	}
+	flush_all(adap);
+
+	return !!(byte & (1 << gpio));
+}
+
+static int v2_gpio_input(struct adapter *adap, int gpio)
 {
 	struct v2_priv *priv = adap->priv;
 	priv->dir &= ~(1 << gpio);
 	return update_gpio(adap, gpio > 7);
 }
 
-int v2_gpio_high(struct adapter *adap, int gpio)
+static int v2_gpio_high(struct adapter *adap, int gpio)
 {
 	struct v2_priv *priv = adap->priv;
 	priv->gpio |= 1 << gpio;
 	return update_gpio(adap, gpio > 7);
 }
 
-int v2_gpio_low(struct adapter *adap, int gpio)
+static int v2_gpio_low(struct adapter *adap, int gpio)
 {
 	struct v2_priv *priv = adap->priv;
 	priv->gpio &= ~(1 << gpio);
@@ -336,6 +358,7 @@ struct adapter_ops v2_ops = {
 	.gpio_input	= v2_gpio_input,
 	.gpio_high	= v2_gpio_high,
 	.gpio_low	= v2_gpio_low,
+	.gpio_get	= v2_gpio_get,
 	.i2c_start	= v2_start,
 	.i2c_repstart	= v2_repstart,
 	.i2c_stop	= v2_stop,
@@ -346,10 +369,11 @@ struct adapter_ops v2_ops = {
 	.sda_out	= 1,
 	.sda_in		= 2,
 	.scl		= 0,
-	.reset		= 4,
-	.user		= 10,
-	.power		= 11,
+	.reset		= 8,
+	.user		= 9,
+	.power		= 15,
+	.i2c_en		= 14,
 	.interface	= INTERFACE_A,
 	.speed_hz	= 400000,
-	.desc		= "Mite-v2",
+	.desc		= "BeagleBone/XDS100V2",
 };
