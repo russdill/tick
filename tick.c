@@ -90,8 +90,13 @@ int main(int argc, char *argv[])
 			{ .addr = ADDR, .flags = I2C_M_RD, .len = 2, .buf = msgbuf[1] },
 		};
 
-again:
+		adapter_gpio_high(adap, ops->i2c_en);
+		adapter_flush(adap);
+		usleep(100000);
 		ret = i2c_xfer(adap, msgs, 4);
+		adapter_gpio_low(adap, ops->i2c_en);
+		adapter_flush(adap);
+
 		if (ret < 0) {
 			fprintf(stderr, "i2c_xfer error: %d\n", ret);
 			goto out;
@@ -101,10 +106,6 @@ again:
 		bus_v = msgbuf[1][1] | (msgbuf[1][0] << 8);
 
 		shunt_v = shunt_v_sh;
-
-		if (!((bus_v >> 1) & 1))
-			/* Hack for v1 communication failures */
-			goto again;
 
 		if (bus_v & 1) {
 			fprintf(stderr, "Overflow\n");
@@ -119,11 +120,16 @@ again:
 		printf("%fV * %fmA = %fmW\n", bus, current * 1000, power * 1000);
 
 	} else if (!strcmp(argv[1], "set")) {
+		adapter_gpio_output(adap, arg_to_gpio(adap, argv[2]));
 		adapter_gpio_high(adap, arg_to_gpio(adap, argv[2]));
 		adapter_flush(adap);
 	} else if (!strcmp(argv[1], "clear")) {
+		adapter_gpio_output(adap, arg_to_gpio(adap, argv[2]));
 		adapter_gpio_low(adap, arg_to_gpio(adap, argv[2]));
 		adapter_flush(adap);
+	} else if (!strcmp(argv[1], "get")) {
+		ret = adapter_gpio_get(adap, arg_to_gpio(adap, argv[2]));
+		printf("%s: %d\n", argv[2], ret);
 	} else {
 		char *end;
 		unsigned char reg;
