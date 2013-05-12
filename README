@@ -1,69 +1,104 @@
 == Introduction ==
 
-The Mite provides many useful features for debugging target boards:
+The Tick provides many useful features for debugging the Beaglebone Black:
 
-* USB to serial interface, terminating with DTE female configuration
-(equivalent to the end of a null modem cable)
-* Power cycling target, up to 16V, 16A, Rds on 4.1mOhm
-* Power monitoring of target (voltage and current)
-* Two soft switches for power/reset/etc
+* USB to serial interface, connects to 6 pin serial connector on BBB.
+* JTAG provided by FT2232H.
+* USB passthrough for connection to BBB.
+* Externally available I2C bus for additional test connectivity.
+* Power cycling target, up to 16V, 60A, Rds on 15.6mOhm.
+* Power monitoring of target (voltage and current).
+* Soft switches for power and reset button.
 
 == USB to Serial Interface ==
 
-The USB to serial interface is provided by the second port of the FTDI 2232D
-chip. RS232 levels are provided on a DB9 female connector in a DTE (null
-modem) configuration. For boards with a DCE connector, the Mite can be
-plugged in directly.
+The USB to serial interface is provided by the second port of the FT2232H
+chip. It connects directly to the first serial port of the BBB.
+
+== JTAG Interface ==
+
+The JTAG interface is also provided by the FT2232H. The configuration matches
+that of the Beaglebone classing JTAG configuration, so existing tools should
+detect and use it. However, the existing openocd codebase does not work with
+the PG2.1 silicon without a small modification. am335x.cfg needs the following
+change:
+
+-jtag newtap $_CHIPNAME jrc -irlen 6 -ircapture 0x1 -irmask 0x3f -expected-id $_JRC_TAPID
++jtag newtap $_CHIPNAME jrc -irlen 6 -ircapture 0x1 -irmask 0x3f -expected-id $_JRC_TAPID -ignore-version
+
+== USB Passthrough ==
+
+The Tick contains a 2 port USB 2.0 hub. One port connects to the onboard
+FT2232H, the other to a USB A connector. The second connector can be used to
+connect to the BBB.
 
 == Power Cycling ==
 
-Power cycling is provided via a P-Channel mosfet, the Infineon IPD90P03P4L-04.
-The jumper next to the power block controls the source of power used, USB if
-the jumper is set, or Vin if the jumper is removed. Enabling and disabling the
-mosfet is done via a FT2232D GPIO.
+Power cycling is provided via a pair of P-channel mosfets, the Vishay Si7997DP.
+The jumper next to the power jack controls the source of power used, USB or AC
+(barrel connector). The jumper position does not effect the power source used
+by the FT2232H and 2 port USB hub. The power mosfets control power provided to
+the stacking connectors and the passthrough USB port. Enabling and disabling the
+mosfet is done via a FT2232H GPIO. Because 2 back to back P-channel mosfets are
+used, powering the BBB via an external source will not back power the Tick.
+
+*** WARNING ***
+
+If the jumper is set to the USB position, be sure you are providing sufficient
+power as the Tick routes power through the stacking connectors, which causes the
+BBB software to assume more than 500mA is available and will configure the CPU
+governer accordingly.
+
+== I2C Bus ==
+
+The FT2232H is used to provide an externally available 3.3V I2C bus. The pins
+used are multiplexed with the pins used for JTAG, and thus only one of these
+interfaces can be used at a time. A FT2232H GPIO is used to switch between
+these functions. The pinout used was chosen so that if a connector is put on
+backwards, no damage will occur (VCC/GND/SDA/SCL).
 
 == Power Monitoring ==
 
 Power monitoring is performed via a TI INA219 I2C current/voltage monitor. A
-50mOhm current sense resistor is used. The I2C bus is connected through the
-FT2232D I2C interface.
+50mOhm current sense resistor is used.
 
 == Soft Switches ==
 
-Back to back mosfets provide soft switch support. When the soft switch is open,
-resistance is very high (above 1 MOhm), when the switch is closed, resistance
-is in the 3 Ohm range.
+Mosfets provide soft switch support for the power and reset switches available
+on the stacking connector. Additional switches are provided on the PCB as the
+switches on the BBB may be difficult to reach with the cape installed. The soft
+switches are controlled through FT2232H GPIOs.
 
-The actual configuration of the physical switches they connect to is not
-important (pullup, pulldown, etc) so long as the voltage is not above 5V.
-Additionally, the Mite and the target board need to share a ground reference
-for the soft switches t work properly.
+== Additional Features ==
 
-The soft switches are controlled through FT2232D GPIOs.
+All connectors contain ESD protection and all signals connected to and from the
+BBB are connected in such a way to prevent back powering either the Tick or
+the BBB. If the Tick is used seperate from the BBB for any reason, the 3.3V
+provided from the BBB on the stacking connector (VDD_3V3B) must be pulled high
+so that the Tick enables its output and input buffers.
 
-== Indicators ==
+The default power on configuration of the Tick is for the power mosfet to be on,
+and the soft switches to be off. This is also the configuration while the Tick
+is powered off.
 
-The board contains two indicator LEDs. The one near the USB connector indicates
-that the board is operational, the indicator near the serial connector indicates
-that the target is receiving power.
+== Tick Utility ==
 
-== Mite Utility ==
+The Tick utility uses libftdi to provide access to the Tick board. To read
+power consumption, just run the Tick utility:
 
-The Mite utility uses libftdi to provide access to the Mite board. To read
-power consumption, just run the mite utility:
-
-./mite
+./tick
 
 shunt 0.020500V, bus 5.125000V
 5.125000V * 410.000mA = 2101.2500mW
 
 To set or clear soft switches or the power mosfet, use set/clear an the name
-of the GPIO:
+of the GPIO. The power mosfet is configured to be active low:
 
-./mite set user		# Close the user soft switch
-./mite clear power	# Turn off the power mosfet
+./tick set user		# Close the user (power button) soft switch
+./tick clear reset	# Release the reset soft switch
+./tick set power	# Turn off the power mosfet
 
-If more than one Mite is connected, an argument can also be passed to indicate
+If more than one Tick is connected, an argument can also be passed to indicate
 which USB device to open. The format used is the one supported by
 ftdi_usb_open_string:
 
@@ -79,12 +114,12 @@ device (starting with 0) if there are more than one
 s:<vendor>:<product>:<serial> first device with given vendor id, product id
 and serial string
 
-So to open the reset soft switch of a Mite with a specific serial number:
+So to open the reset soft switch of a Tick with a specific serial number:
 
-./mite s:0x0403:0x6010:0008 clear reset
+./tick s:0x0403:0x6010:Tick-A03 clear reset
 
 To check power based on a specific sysfs path:
 
 devpath=/sys/bus/usb/devices/2-1.1.1.1
 dev=$(printf "%03d/%03d" $(cat "$devpath/busnum") $(cat "$devpath/devnum")
-./mite d:$dev
+./tick d:$dev
