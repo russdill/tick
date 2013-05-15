@@ -5,7 +5,7 @@ FileVersion[20100606]
 
 PCB["tick" 103.0000mm 56.0000mm]
 
-Grid[393.700787 0.0000 0.0000 0]
+Grid[1968.503937 0.0000 0.0000 0]
 PolyArea[3100.006200]
 Thermal[0.500000]
 DRC[6.00mil 6.00mil 6.00mil 0.1000mm 13.00mil 7.00mil]
@@ -786,7 +786,7 @@ Symbol['~' 12.00mil]
 	SymbolLine[20.00mil 35.00mil 25.00mil 30.00mil 8.00mil]
 )
 Attribute("PCB::grid::unit" "mm")
-Attribute("PCB::grid::size" "0.1000mm")
+Attribute("PCB::grid::size" "0.5000mm")
 Via[97.6000mm 19.7000mm 27.00mil 12.00mil 0.0000 13.00mil "" "thermal(1S)"]
 Via[97.6000mm 22.2000mm 27.00mil 12.00mil 0.0000 13.00mil "" "thermal(1S)"]
 Via[97.6000mm 17.2000mm 27.00mil 12.00mil 0.0000 13.00mil "" "thermal(1S)"]
@@ -5606,6 +5606,18 @@ Element["onsolder" "pj-202a" "P3" "unknown" 94.9000mm 25.5000mm 0.4000mm 6.2350m
 	ElementLine [-9.2000mm 7.2000mm -8.7000mm 7.2000mm 0.2000mm]
 	ElementLine [7.5000mm 7.2000mm 7.5000mm 6.7000mm 0.2000mm]
 	ElementLine [7.0000mm 7.2000mm 7.5000mm 7.2000mm 0.2000mm]
+
+	)
+
+Element["" "fiducial" "" "" 90.0000mm 7.0000mm 0.0000 0.0000 0 100 ""]
+(
+	Pad[0.0000 0.0000 0.0000 0.0000 1.0000mm 1.0000mm 2.0000mm "" "1" "nopaste"]
+
+	)
+
+Element["" "fiducial" "" "" 20.0000mm 52.0000mm 0.0000 0.0000 0 100 ""]
+(
+	Pad[0.0000 0.0000 0.0000 0.0000 1.0000mm 1.0000mm 2.0000mm "" "1" "nopaste"]
 
 	)
 Layer(1 "top")
